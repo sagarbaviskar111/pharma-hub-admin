@@ -1,0 +1,116 @@
+// src/App.js
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import Login from './pages/Login';
+import Home from './pages/Home';
+import AddJob from './pages/AddJob';
+import ListJobs from './pages/ListJobs';
+import AddDepartment from './pages/AddDepartment';
+import ListDepartments from './pages/ListDepartments';
+import Layout from './components/Layout';
+import UpdateJob from './pages/UpdateJob';
+
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+
+  // Update authentication state on login
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
+  // Clear authentication state on logout
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+  };
+
+  return (
+    <Router>
+      <Routes>
+        {/* Redirect to home if authenticated; otherwise, show Login */}
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? <Navigate to="/home" /> : <Login onLogin={handleLogin} />
+          }
+        />
+
+        {/* Protected Routes with Layout */}
+        <Route
+          path="/home"
+          element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <Home />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+        <Route
+          path="/add-job"
+          element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <AddJob />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+        <Route
+          path="/list-jobs"
+          element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <ListJobs />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+        <Route
+          path="/add-department"
+          element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <AddDepartment />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+        <Route
+          path="/list-departments"
+          element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <ListDepartments />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+        <Route
+          path="/update-job/:id"
+          element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <UpdateJob />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
