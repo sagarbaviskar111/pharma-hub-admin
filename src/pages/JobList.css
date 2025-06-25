@@ -1,0 +1,121 @@
+/* Container for the entire job list */
+.job-list-container {
+    width: 90%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Title styling */
+.title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Error message styling */
+.error-message {
+    color: red;
+    font-size: 1rem;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Job table styling */
+.job-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Table headers */
+.job-table thead {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.job-table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+/* Table rows */
+.job-table tbody tr {
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.job-table td {
+    padding: 12px;
+    color: #555;
+}
+
+.job-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Action buttons container - positioned in line with proper spacing */
+.job-table .actions {
+    display: flex;
+    justify-content: space-between; /* Space buttons evenly */
+    gap: 20px; /* Adds a specific gap between the buttons */
+}
+
+/* Edit and delete buttons styling */
+.edit-button, .delete-button {
+    padding: 8px 16px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    width: 100px;  /* Ensures buttons are the same size */
+}
+
+/* Edit button style */
+.edit-button {
+    background-color: #ffa500;
+    color: white;
+    margin-bottom: 10px;
+}
+
+.edit-button:hover {
+    background-color: #ff7f00;
+}
+
+/* Delete button style */
+.delete-button {
+    background-color: #e53946;
+    color: white;
+}
+
+.delete-button:hover {
+    background-color: #d32f2f;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .job-table th, .job-table td {
+        padding: 10px;
+        font-size: 0.9rem;
+    }
+
+    .job-list-container {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+}
