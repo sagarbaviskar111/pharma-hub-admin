@@ -221,13 +221,13 @@ const validators = {
 
     if (!credentials.email) {
       errors.push('Email is required');
-    } else if (!this.isValidEmail(credentials.email)) {
+    } else if (!validators.isValidEmail(credentials.email)) {
       errors.push('Email format is invalid');
     }
 
     if (!credentials.password) {
       errors.push('Password is required');
-    } else if (!this.isValidPassword(credentials.password)) {
+    } else if (!validators.isValidPassword(credentials.password)) {
       errors.push('Password must be at least 6 characters');
     }
 
