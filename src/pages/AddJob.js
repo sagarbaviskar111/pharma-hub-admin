@@ -3,6 +3,57 @@ import './AddJob.css';
 import BASE_API_URL from '../utils/apiConfig';
 import validators from '../utils/validators';
 
+// File validation helper
+function validateFiles(imageFile, logoFile, maxSizeBytes = 10 * 1024 * 1024) {
+    if (!imageFile) throw new Error('Image file is required.');
+    if (!imageFile.type.startsWith('image/')) throw new Error('Image must be an image file.');
+    if (imageFile.size > maxSizeBytes) {
+        const maxMB = Math.round(maxSizeBytes / (1024 * 1024));
+        throw new Error(`Image exceeds max size of ${maxMB}MB. Current size: ${Math.round(imageFile.size / (1024 * 1024))}MB.`);
+    }
+    if (logoFile) {
+        if (!logoFile.type.startsWith('image/')) throw new Error('Logo must be an image file.');
+        if (logoFile.size > maxSizeBytes) {
+            const maxMB = Math.round(maxSizeBytes / (1024 * 1024));
+            throw new Error(`Logo exceeds max size of ${maxMB}MB. Current size: ${Math.round(logoFile.size / (1024 * 1024))}MB.`);
+        }
+    }
+    return true;
+}
+
+// Build FormData with correct field names
+function buildJobFormData(values, imageFile, logoFile) {
+    const form = new FormData();
+    form.append('company', values.company || '');
+    form.append('positionName', values.positionName || '');
+    form.append('qualification', values.qualification || '');
+    form.append('experience', values.experience || '');
+    form.append('salary', values.salary || '');
+    form.append('location', values.location || '');
+    form.append('applylink', values.applylink || '');
+    form.append('tags', values.tags || '');
+    form.append('companyOverview', values.companyOverview || '');
+    if (values.department) form.append('department', values.department);
+    form.append('email', values.email || '');
+    form.append('driveLocation', values.driveLocation || '');
+    form.append('driveDate', values.driveDate || '');
+    form.append('driveTime', values.driveTime || '');
+    form.append('driveContactPerson', values.driveContactPerson || '');
+    form.append('driveContactNumber', values.driveContactNumber || '');
+    if (values.applicationDeadline) form.append('applicationDeadline', values.applicationDeadline);
+    form.append('type', values.type || '');
+    
+    // Arrays: append each entry separately
+    (values.responsibilities || []).forEach(r => form.append('responsibilities', r));
+    (values.skills || []).forEach(s => form.append('skills', s));
+    
+    // Files
+    form.append('image', imageFile);
+    if (logoFile) form.append('logo', logoFile);
+    
+    return form;
+}
+
 const AddJob = () => {
     const [departments, setDepartments] = useState([]);
     const [job, setJob] = useState({
@@ -146,59 +197,19 @@ const AddJob = () => {
         setErrors([]);
         setLoading(true);
 
-        // Validate job data
-        const validation = validators.validateJobCreate(job);
-        if (!validation.isValid) {
-            setErrors(validation.errors);
-            setLoading(false);
-            return;
-        }
-
-        // Validate files
-        if (!imageFile) {
-            setErrors(['Image file is required (max 5MB, image format)']);
-            setLoading(false);
-            return;
-        }
-
-        const imageValidation = validators.validateFile(imageFile, 'image/*', 5 * 1024 * 1024);
-        if (!imageValidation.isValid) {
-            setErrors([imageValidation.error]);
-            setLoading(false);
-            return;
-        }
-
-        if (logoFile) {
-            const logoValidation = validators.validateFile(logoFile, 'image/*', 5 * 1024 * 1024);
-            if (!logoValidation.isValid) {
-                setErrors([logoValidation.error]);
+        try {
+            // Validate job data
+            const validation = validators.validateJobCreate(job);
+            if (!validation.isValid) {
+                setErrors(validation.errors);
                 setLoading(false);
                 return;
             }
-        }
 
-        const formData = new FormData();
+            // Validate files
+            validateFiles(imageFile, logoFile, 10 * 1024 * 1024);
 
-        for (let key in job) {
-            if (key === 'responsibilities' || key === 'skills') {
-                if (Array.isArray(job[key])) {
-                    job[key].forEach(item => {
-                        formData.append(`${key}[]`, item);
-                    });
-                } else {
-                    formData.append(key, JSON.stringify(job[key]));
-                }
-            } else {
-                formData.append(key, job[key]);
-            }
-        }
-
-        formData.append('image', imageFile);
-        if (logoFile) {
-            formData.append('logo', logoFile);
-        }
-
-        try {
+            // Get auth token
             const token = localStorage.getItem('token');
             if (!token) {
                 setErrors(['Authentication token not found. Please login again.']);
@@ -206,48 +217,70 @@ const AddJob = () => {
                 return;
             }
 
+            // Build FormData with correct field names
+            const formData = buildJobFormData(job, imageFile, logoFile);
+
+            // Log file sizes for debugging
+            console.log('image size:', imageFile.size, 'bytes');
+            if (logoFile) console.log('logo size:', logoFile.size, 'bytes');
+
+            // Upload with proper headers (do NOT set Content-Type manually)
             const response = await fetch(`${BASE_API_URL}/api/jobs`, {
                 method: 'POST',
                 body: formData,
                 headers: {
                     'Authorization': `Bearer ${token}`,
+                    // DO NOT set Content-Type - browser will set it with boundary
                 },
             });
 
-            if (response.ok) {
-                alert('Job details submitted successfully!');
-                setJob({
-                    company: '',
-                    positionName: '',
-                    qualification: '',
-                    experience: '',
-                    salary: '',
-                    location: '',
-                    responsibilities: [],
-                    tags: '',
-                    applylink: '',
-                    skills: [],
-                    companyOverview: '',
-                    department: '',
-                    email: '',
-                    driveLocation: '',
-                    driveDate: '',
-                    driveTime: '',
-                    driveContactPerson: '',
-                    driveContactNumber: '',
-                    applicationDeadline: '',
-                    type: ''
-                });
-                setImageFile(null);
-                setLogoFile(null);
-                setErrors([]);
-            } else {
-                const responseData = await response.json();
-                const errorMsg = responseData.message || 'Failed to submit job details';
-                setErrors([errorMsg]);
+            if (response.status === 413) {
+                setErrors(['File too large. Server rejected payload. Try compressing images or contact admin.']);
+                setLoading(false);
+                return;
             }
+
+            if (!response.ok) {
+                const responseData = await response.json().catch(() => ({}));
+                const errorMsg = responseData.message || responseData.error || 'Failed to submit job details';
+                setErrors([errorMsg]);
+                setLoading(false);
+                return;
+            }
+
+            alert('Job details submitted successfully!');
+            setJob({
+                company: '',
+                positionName: '',
+                qualification: '',
+                experience: '',
+                salary: '',
+                location: '',
+                responsibilities: [],
+                tags: '',
+                applylink: '',
+                skills: [],
+                companyOverview: '',
+                department: '',
+                email: '',
+                driveLocation: '',
+                driveDate: '',
+                driveTime: '',
+                driveContactPerson: '',
+                driveContactNumber: '',
+                applicationDeadline: '',
+                type: ''
+            });
+            setImageFile(null);
+            setLogoFile(null);
+            setErrors([]);
         } catch (error) {
             console.error('Error:', error);
+            setErrors([error.message || 'An error occurred while submitting the form']);
+        } finally {
+            setLoading(false);
+        }
+    };
             setErrors(['An error occurred while submitting job details. Please try again.']);
         } finally {
             setLoading(false);

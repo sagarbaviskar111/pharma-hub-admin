@@ -163,10 +163,8 @@ const UpdateJob = () => {
                 if (key === 'responsibilities' || key === 'skills') {
                     if (Array.isArray(job[key])) {
                         job[key].forEach(item => {
-                            formData.append(`${key}[]`, item);
+                            formData.append(key, item);
                         });
-                    } else {
-                        formData.append(key, JSON.stringify(job[key]));
                     }
                 } else if (job[key] instanceof File) {
                     formData.append(key, job[key]);
@@ -175,23 +173,41 @@ const UpdateJob = () => {
                 }
             }
 
+            // Log payload size for debugging
+            let totalSize = 0;
+            for (let pair of formData.entries()) {
+                if (pair[1] instanceof File) {
+                    totalSize += pair[1].size;
+                }
+            }
+            console.log('Payload file size:', totalSize, 'bytes');
+
             const response = await fetch(`${BASE_API_URL}/api/jobs/${id}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
+                    // DO NOT set Content-Type - browser will set it with boundary
                 },
                 body: formData,
             });
 
-            if (response.ok) {
-                setSuccess(true);
-                alert('Job updated successfully!');
-                navigate('/list-jobs');
-            } else {
-                const responseData = await response.json();
-                const errorMsg = responseData.message || 'Failed to update job';
-                setErrors([errorMsg]);
+            if (response.status === 413) {
+                setErrors(['File too large. Server rejected payload. Try compressing images.']);
+                setLoading(false);
+                return;
             }
+
+            if (!response.ok) {
+                const responseData = await response.json().catch(() => ({}));
+                const errorMsg = responseData.message || responseData.error || 'Failed to update job';
+                setErrors([errorMsg]);
+                setLoading(false);
+                return;
+            }
+
+            setSuccess(true);
+            alert('Job updated successfully!');
+            navigate('/list-jobs');
         } catch (err) {
             setErrors([err.message || 'An error occurred while updating the job. Please try again.']);
         } finally {

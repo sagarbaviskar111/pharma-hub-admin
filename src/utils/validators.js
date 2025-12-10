@@ -138,10 +138,10 @@ const validators = {
    * Validate file upload
    * @param {File} file - File to validate
    * @param {string} type - Expected MIME type pattern (e.g., 'image/*')
-   * @param {number} maxSizeBytes - Maximum file size in bytes (default 5MB)
+   * @param {number} maxSizeBytes - Maximum file size in bytes (default 10MB)
    * @returns {object} - { isValid: boolean, error: string }
    */
-  validateFile: (file, type = 'image/*', maxSizeBytes = 5 * 1024 * 1024) => {
+  validateFile: (file, type = 'image/*', maxSizeBytes = 10 * 1024 * 1024) => {
     if (!file) {
       return { isValid: false, error: 'File is required' };
     }

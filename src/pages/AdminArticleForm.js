@@ -55,7 +55,7 @@ const AdminNews = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const validation = validators.validateFile(file, 'image/*', 5 * 1024 * 1024);
+      const validation = validators.validateFile(file, 'image/*', 10 * 1024 * 1024);
       if (validation.isValid) {
         setSelectedImage(file);
         setValidationErrors(validationErrors.filter(err => !err.includes('image')));
@@ -70,63 +70,79 @@ const AdminNews = () => {
     setValidationErrors([]);
     setLoading(true);
 
-    // Validate news data
-    const validation = validators.validateNews(values);
-    if (!validation.isValid) {
-      setValidationErrors(validation.errors);
-      setLoading(false);
-      return;
-    }
-
-    // For new articles, image is required
-    if (!editingNews && !selectedImage) {
-      setValidationErrors(['Image file is required for new articles (max 5MB)']);
-      setLoading(false);
-      return;
-    }
-
-    // Validate image if provided
-    if (selectedImage) {
-      const imageValidation = validators.validateFile(selectedImage, 'image/*', 5 * 1024 * 1024);
-      if (!imageValidation.isValid) {
-        setValidationErrors([imageValidation.error]);
+    try {
+      // Validate news data
+      const validation = validators.validateNews(values);
+      if (!validation.isValid) {
+        setValidationErrors(validation.errors);
         setLoading(false);
         return;
       }
-    }
 
-    const formData = new FormData();
-    formData.append("title", values.title);
-    formData.append("content", values.content);
-    formData.append("author", values.author);
-    if (selectedImage) {
-      formData.append("image", selectedImage);
-    }
+      // For new articles, image is required
+      if (!editingNews && !selectedImage) {
+        setValidationErrors(['Image file is required for new articles (max 10MB)']);
+        setLoading(false);
+        return;
+      }
 
-    try {
+      // Validate image if provided
+      if (selectedImage) {
+        const imageValidation = validators.validateFile(selectedImage, 'image/*', 10 * 1024 * 1024);
+        if (!imageValidation.isValid) {
+          setValidationErrors([imageValidation.error]);
+          setLoading(false);
+          return;
+        }
+      }
+
+      const formData = new FormData();
+      formData.append("title", values.title);
+      formData.append("content", values.content);
+      formData.append("author", values.author);
+      if (selectedImage) {
+        formData.append("image", selectedImage);
+      }
+
+      // Log file size for debugging
+      if (selectedImage) {
+        console.log('Uploading news image size:', selectedImage.size, 'bytes');
+      }
+
       const response = await fetch(
         `${BASE_API_URL}/api/news${editingNews ? `/${editingNews._id}` : ""}`,
         {
           method: editingNews ? "PUT" : "POST",
+          headers: {
+            // DO NOT set Content-Type - browser will set it with boundary
+          },
           body: formData,
         }
       );
 
-      if (response.ok) {
-        message.success(editingNews ? "News updated successfully" : "News added successfully");
-        fetchNews();
-        handleCloseModal();
-      } else {
-        const responseData = await response.json();
-        const errorMsg = responseData.message || "Failed to save news";
-        setValidationErrors([errorMsg]);
+      if (response.status === 413) {
+        setValidationErrors(['File too large. Server rejected payload. Try compressing image.']);
+        setLoading(false);
+        return;
       }
+
+      if (!response.ok) {
+        const responseData = await response.json().catch(() => ({}));
+        const errorMsg = responseData.message || responseData.error || "Failed to save news";
+        setValidationErrors([errorMsg]);
+        setLoading(false);
+        return;
+      }
+
+      message.success(editingNews ? "News updated successfully" : "News added successfully");
+      fetchNews();
+      handleCloseModal();
     } catch (error) {
       console.error("Error saving news:", error);
-      setValidationErrors(["An error occurred while saving the news. Please try again."]);
+      setValidationErrors([error.message || "An error occurred while saving the news. Please try again."]);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   // Delete News
