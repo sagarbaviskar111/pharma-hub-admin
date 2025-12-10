@@ -281,11 +281,6 @@ const AddJob = () => {
             setLoading(false);
         }
     };
-            setErrors(['An error occurred while submitting job details. Please try again.']);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     return (
         <div className="formContainer">

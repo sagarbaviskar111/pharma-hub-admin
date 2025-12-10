@@ -171,7 +171,7 @@ export async function compressImageIfNeeded(file, maxSizeMB = 2) {
   }
 }
 
-export default {
+const uploadHelpers = {
   validateFiles,
   buildJobFormData,
   uploadJobFetch,
@@ -179,3 +179,5 @@ export default {
   validateFile,
   compressImageIfNeeded
 };
+
+export default uploadHelpers;

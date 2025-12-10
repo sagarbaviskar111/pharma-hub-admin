@@ -75,6 +75,7 @@ const UpdateJob = () => {
     useEffect(() => {
         fetchJobDetails();
         fetchDepartments();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     const handleAddResponsibility = () => {
