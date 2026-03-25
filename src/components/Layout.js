@@ -42,6 +42,15 @@ const Layout = ({ children }) => {
           <li>
             <Link to="/news">List Artical</Link>
           </li>
+          <li>
+            <Link to="/admission-open">Admission Open</Link>
+          </li>
+          <li>
+            <Link to="/event-banner">Event Banner</Link>
+          </li>
+          <li>
+            <Link to="/students-img">Students Images</Link>
+          </li>
         </ul>
       </div>
 

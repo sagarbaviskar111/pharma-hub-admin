@@ -13,6 +13,9 @@ import AddArticle from './pages/AdminArticleForm';
 import EditNews from './pages/EditNews';
 import AddNews from './pages/AdminArticleForm';
 import NewsList from './pages/ListNews';
+import AdmissionOpen from './pages/AdmissionOpen';
+import EventBanner from './pages/EventBanner';
+import StudentsImg from './pages/StudentsImg';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -152,6 +155,44 @@ function App() {
             <Layout>
               <EditNews />
             </Layout>
+        }
+      />
+
+      {/* New Pages */}
+      <Route
+        path="/admission-open"
+        element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <AdmissionOpen />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+        }
+      />
+      <Route
+        path="/event-banner"
+        element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <EventBanner />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+        }
+      />
+      <Route
+        path="/students-img"
+        element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <StudentsImg />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
         }
       />
       </Routes>

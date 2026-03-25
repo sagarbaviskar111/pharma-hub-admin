@@ -4,7 +4,10 @@
 // const BASE_API_URL = "https://api.pharmatalenthub.in";  
 // const BASE_API_URL = "https://pharma-bharat-be.onrender.com";  
 
-// Production
+// Local Development
+// const BASE_API_URL = "http://localhost:5000";
+
+// Production (commented out)
 const BASE_API_URL = "https://pharmatalenthub.in";
 
 // Alternative Production
