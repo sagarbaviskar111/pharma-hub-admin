@@ -48,7 +48,7 @@ const DepartmentForm = () => {
                 return;
             }
 
-            const result = await response.json();
+            await response.json();
             setSuccessMessage('Department added successfully!');
             setDepartmentName('');
             setErrors([]);
