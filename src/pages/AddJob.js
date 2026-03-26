@@ -47,6 +47,10 @@ function buildJobFormData(values, imageFile, logoFile) {
     (values.responsibilities || []).forEach(r => form.append('responsibilities', r));
     (values.skills || []).forEach(s => form.append('skills', s));
     
+    if (values.commonInterviewQuestions && values.commonInterviewQuestions.length > 0) {
+        form.append('commonInterviewQuestions', JSON.stringify(values.commonInterviewQuestions));
+    }
+
     // Files
     form.append('image', imageFile);
     if (logoFile) form.append('logo', logoFile);
@@ -76,10 +80,12 @@ const AddJob = () => {
         driveContactPerson: '',
         driveContactNumber: '',
         applicationDeadline: '',
-        type: ''
+        type: '',
+        commonInterviewQuestions: []
     });
     const [responsibility, setResponsibility] = useState('');
     const [skill, setSkill] = useState('');
+    const [interviewQuestion, setInterviewQuestion] = useState({ question: '', answer: '' });
     const [imageFile, setImageFile] = useState(null);
     const [logoFile, setLogoFile] = useState(null);
     const [errors, setErrors] = useState([]);
@@ -120,6 +126,16 @@ const AddJob = () => {
                 skills: [...prevState.skills, skill]
             }));
             setSkill('');
+        }
+    };
+
+    const handleAddQuestion = () => {
+        if (interviewQuestion.question.trim() && interviewQuestion.answer.trim()) {
+            setJob((prevState) => ({
+                ...prevState,
+                commonInterviewQuestions: [...prevState.commonInterviewQuestions, interviewQuestion]
+            }));
+            setInterviewQuestion({ question: '', answer: '' });
         }
     };
 
@@ -170,9 +186,22 @@ const AddJob = () => {
         });
     };
 
+    const handleDeleteQuestion = (index) => {
+        setJob({
+            ...job,
+            commonInterviewQuestions: job.commonInterviewQuestions.filter((_, i) => i !== index),
+        });
+    };
+
     const handleJsonApply = () => {
         try {
-            const parsedData = JSON.parse(jsonInput);
+            let parsedData = JSON.parse(jsonInput);
+            
+            // If the user pasted an API response containing 'job', extract it
+            if (parsedData.job) {
+                parsedData = parsedData.job;
+            }
+
             const validation = validators.validateJobCreate(parsedData);
             
             if (!validation.isValid) {
@@ -269,7 +298,8 @@ const AddJob = () => {
                 driveContactPerson: '',
                 driveContactNumber: '',
                 applicationDeadline: '',
-                type: ''
+                type: '',
+                commonInterviewQuestions: []
             });
             setImageFile(null);
             setLogoFile(null);
@@ -431,6 +461,43 @@ const AddJob = () => {
                                     <button type="button" className="deleteButton" onClick={() => handleDeleteSkill(index)} disabled={loading}>
                                         &#10006;
                                     </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div className="fieldGroup">
+                        <label className="label">Common Interview Questions:</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '15px' }}>
+                            <input 
+                                type="text" 
+                                value={interviewQuestion.question} 
+                                onChange={(e) => setInterviewQuestion({ ...interviewQuestion, question: e.target.value })} 
+                                className="input" 
+                                placeholder="Question (e.g. Why should we hire you?)" 
+                                disabled={loading} 
+                            />
+                            <textarea 
+                                value={interviewQuestion.answer} 
+                                onChange={(e) => setInterviewQuestion({ ...interviewQuestion, answer: e.target.value })} 
+                                className="textarea" 
+                                placeholder="Answer" 
+                                disabled={loading} 
+                            ></textarea>
+                            <button type="button" onClick={handleAddQuestion} className="addButton" disabled={!interviewQuestion.question.trim() || !interviewQuestion.answer.trim() || loading} style={{ alignSelf: 'flex-start' }}>
+                                Add Question
+                            </button>
+                        </div>
+                        <ul className="list">
+                            {job.commonInterviewQuestions.map((item, index) => (
+                                <li key={index} className="listItem" style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '15px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '5px' }}>
+                                        <strong>Q: {item.question}</strong>
+                                        <button type="button" className="deleteButton" onClick={() => handleDeleteQuestion(index)} disabled={loading}>
+                                            &#10006;
+                                        </button>
+                                    </div>
+                                    <div style={{ color: '#475569', fontSize: '14px', whiteSpace: 'pre-wrap' }}>A: {item.answer}</div>
                                 </li>
                             ))}
                         </ul>

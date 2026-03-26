@@ -29,9 +29,11 @@ const UpdateJob = () => {
         driveTime: '',
         driveContactPerson: '',
         driveContactNumber: '',
+        commonInterviewQuestions: [],
     });
     const [responsibility, setResponsibility] = useState('');
     const [skill, setSkill] = useState('');
+    const [interviewQuestion, setInterviewQuestion] = useState({ question: '', answer: '' });
     const [errors, setErrors] = useState([]);
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -53,7 +55,8 @@ const UpdateJob = () => {
             const data = await response.json();
             setJob({
                 ...data,
-                department: data.department._id,
+                department: data.department ? data.department._id : '',
+                commonInterviewQuestions: data.commonInterviewQuestions || []
             });
         } catch (err) {
             setErrors([err.message]);
@@ -98,6 +101,17 @@ const UpdateJob = () => {
         }
     };
 
+    const handleAddQuestion = () => {
+        if (interviewQuestion.question.trim() && interviewQuestion.answer.trim()) {
+            setJob((prevState) => ({
+                ...prevState,
+                commonInterviewQuestions: [...prevState.commonInterviewQuestions, interviewQuestion]
+            }));
+            setInterviewQuestion({ question: '', answer: '' });
+        }
+    };
+
+
     const handleChange = (e) => {
         setJob({
             ...job,
@@ -116,6 +130,13 @@ const UpdateJob = () => {
         setJob({
             ...job,
             skills: job.skills.filter((_, i) => i !== index),
+        });
+    };
+
+    const handleDeleteQuestion = (index) => {
+        setJob({
+            ...job,
+            commonInterviewQuestions: job.commonInterviewQuestions.filter((_, i) => i !== index),
         });
     };
 
@@ -166,6 +187,10 @@ const UpdateJob = () => {
                         job[key].forEach(item => {
                             formData.append(key, item);
                         });
+                    }
+                } else if (key === 'commonInterviewQuestions') {
+                    if (Array.isArray(job[key]) && job[key].length > 0) {
+                        formData.append(key, JSON.stringify(job[key]));
                     }
                 } else if (job[key] instanceof File) {
                     formData.append(key, job[key]);
@@ -399,6 +424,43 @@ const UpdateJob = () => {
                                 >
                                     &#10006;
                                 </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+
+                <div className="fieldGroup">
+                    <label className="label">Common Interview Questions:</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '15px' }}>
+                        <input 
+                            type="text" 
+                            value={interviewQuestion.question} 
+                            onChange={(e) => setInterviewQuestion({ ...interviewQuestion, question: e.target.value })} 
+                            className="input" 
+                            placeholder="Question (e.g. Why should we hire you?)" 
+                            disabled={loading} 
+                        />
+                        <textarea 
+                            value={interviewQuestion.answer} 
+                            onChange={(e) => setInterviewQuestion({ ...interviewQuestion, answer: e.target.value })} 
+                            className="textarea" 
+                            placeholder="Answer" 
+                            disabled={loading} 
+                        ></textarea>
+                        <button type="button" onClick={handleAddQuestion} className="addButton" disabled={!interviewQuestion.question.trim() || !interviewQuestion.answer.trim() || loading} style={{ alignSelf: 'flex-start' }}>
+                            Add Question
+                        </button>
+                    </div>
+                    <ul className="list">
+                        {(job.commonInterviewQuestions || []).map((item, index) => (
+                            <li key={index} className="listItem" style={{ flexDirection: 'column', alignItems: 'flex-start', padding: '15px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', marginBottom: '5px' }}>
+                                    <strong>Q: {item.question}</strong>
+                                    <button type="button" className="deleteButton" onClick={() => handleDeleteQuestion(index)} disabled={loading}>
+                                        &#10006;
+                                    </button>
+                                </div>
+                                <div style={{ color: '#475569', fontSize: '14px', whiteSpace: 'pre-wrap' }}>A: {item.answer}</div>
                             </li>
                         ))}
                     </ul>

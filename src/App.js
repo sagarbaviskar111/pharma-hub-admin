@@ -16,6 +16,7 @@ import NewsList from './pages/ListNews';
 import AdmissionOpen from './pages/AdmissionOpen';
 import EventBanner from './pages/EventBanner';
 import StudentsImg from './pages/StudentsImg';
+import Courses from './pages/Courses';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -189,6 +190,18 @@ function App() {
             isAuthenticated ? (
               <Layout onLogout={handleLogout}>
                 <StudentsImg />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+        }
+      />
+      <Route
+        path="/courses"
+        element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <Courses />
               </Layout>
             ) : (
               <Navigate to="/" />

@@ -51,6 +51,9 @@ const Layout = ({ children }) => {
           <li>
             <Link to="/students-img">Students Images</Link>
           </li>
+          <li>
+            <Link to="/courses">Courses</Link>
+          </li>
         </ul>
       </div>
 
