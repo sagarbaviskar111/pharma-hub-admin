@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Ensure you have react-router-dom installed
-import './JobList.css'; // Import the CSS file for styling
+import { useNavigate } from 'react-router-dom';
+import './JobList.css';
 import BASE_API_URL from '../utils/apiConfig';
 
 const JobList = () => {
     const [jobs, setJobs] = useState([]);
     const [error, setError] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const navigate = useNavigate();
+    const limit = 10; // Number of jobs per page
 
-    // Fetch jobs from API
-    const fetchJobs = async () => {
+    // Fetch jobs from API with pagination
+    const fetchJobs = async (page = 1) => {
         try {
-            const response = await fetch(`${BASE_API_URL}/api/jobs`, {
+            const response = await fetch(`${BASE_API_URL}/api/jobs?page=${page}&limit=${limit}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
@@ -23,6 +26,7 @@ const JobList = () => {
 
             const data = await response.json();
             setJobs(data.jobs);
+            setTotalPages(data.totalPages || 1);
         } catch (err) {
             setError(err.message);
         }
@@ -42,8 +46,7 @@ const JobList = () => {
                 throw new Error('Error deleting job');
             }
 
-            // Refresh the job list after deletion
-            fetchJobs();
+            fetchJobs(currentPage);
         } catch (err) {
             setError(err.message);
         }
@@ -51,12 +54,12 @@ const JobList = () => {
 
     // Navigate to update job page
     const editJob = (jobId) => {
-        navigate(`/update-job/${jobId}`); // Pass job ID as a URL parameter
+        navigate(`/update-job/${jobId}`);
     };
 
     useEffect(() => {
-        fetchJobs(); // Fetch jobs on component mount
-    }, []);
+        fetchJobs(currentPage);
+    }, [currentPage]);
 
     return (
         <div className="job-list-container">
@@ -78,23 +81,32 @@ const JobList = () => {
                             <td>{job.company}</td>
                             <td>{job.location}</td>
                             <td>
-                                <button
-                                    className="edit-button"
-                                    onClick={() => editJob(job._id)}
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    className="delete-button"
-                                    onClick={() => deleteJob(job._id)}
-                                >
-                                    Delete
-                                </button>
+                                <button className="edit-button" onClick={() => editJob(job._id)}>Edit</button>
+                                <button className="delete-button" onClick={() => deleteJob(job._id)}>Delete</button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+
+            {/* Pagination Controls */}
+            <div className="pagination">
+                <button 
+                    className="prev-button" 
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                >
+                    Previous
+                </button>
+                <span>Page {currentPage} of {totalPages}</span>
+                <button 
+                    className="next-button" 
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                >
+                    Next
+                </button>
+            </div>
         </div>
     );
 };

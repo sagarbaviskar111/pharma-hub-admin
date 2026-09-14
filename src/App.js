@@ -1,5 +1,5 @@
 // src/App.js
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Home from './pages/Home';
@@ -9,6 +9,14 @@ import AddDepartment from './pages/AddDepartment';
 import ListDepartments from './pages/ListDepartments';
 import Layout from './components/Layout';
 import UpdateJob from './pages/UpdateJob';
+import AddArticle from './pages/AdminArticleForm';
+import EditNews from './pages/EditNews';
+import AddNews from './pages/AdminArticleForm';
+import NewsList from './pages/ListNews';
+import AdmissionOpen from './pages/AdmissionOpen';
+import EventBanner from './pages/EventBanner';
+import StudentsImg from './pages/StudentsImg';
+import Courses from './pages/Courses';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
@@ -108,9 +116,105 @@ function App() {
             )
           }
         />
+
+<Route
+          path="/add-artical"
+          element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <AddArticle />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+<Route
+        path="/news"
+        element={
+            <Layout>
+              <NewsList />
+            </Layout>
+        }
+      />
+
+      {/* Add News Page */}
+      <Route
+        path="/news/add"
+        element={
+            <Layout>
+              <AddNews />
+            </Layout>
+        }
+      />
+
+      {/* Edit News Page */}
+      <Route
+        path="/news/edit/:id"
+        element={
+            <Layout>
+              <EditNews />
+            </Layout>
+        }
+      />
+
+      {/* New Pages */}
+      <Route
+        path="/admission-open"
+        element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <AdmissionOpen />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+        }
+      />
+      <Route
+        path="/event-banner"
+        element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <EventBanner />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+        }
+      />
+      <Route
+        path="/students-img"
+        element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <StudentsImg />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+        }
+      />
+      <Route
+        path="/courses"
+        element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <Courses />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+        }
+      />
       </Routes>
     </Router>
   );
 }
 
 export default App;
+
+
+
+
