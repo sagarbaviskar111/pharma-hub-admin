@@ -29,6 +29,8 @@ const UpdateJob = () => {
         driveTime: '',
         driveContactPerson: '',
         driveContactNumber: '',
+        sourceReferenceLink: '',
+        sourceReferenceScreenshot: '',
         commonInterviewQuestions: [],
     });
     const [responsibility, setResponsibility] = useState('');
@@ -501,6 +503,31 @@ const UpdateJob = () => {
                     <input
                         type="file"
                         name="logo"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="fileInput"
+                        disabled={loading}
+                    />
+                </label>
+
+                <label className="label">
+                    Source Reference Link:
+                    <input
+                        type="text"
+                        name="sourceReferenceLink"
+                        value={typeof job.sourceReferenceLink === 'string' ? job.sourceReferenceLink : ''}
+                        onChange={handleChange}
+                        className="input"
+                        placeholder="https://example.com/source"
+                        disabled={loading}
+                    />
+                </label>
+
+                <label className="label">
+                    Source Reference Screenshot (max 5MB, optional — uploading replaces the existing one):
+                    <input
+                        type="file"
+                        name="sourceReferenceScreenshot"
                         accept="image/*"
                         onChange={handleFileChange}
                         className="fileInput"
