@@ -4,7 +4,7 @@ import BASE_API_URL from '../utils/apiConfig';
 import validators from '../utils/validators';
 
 // File validation helper
-function validateFiles(imageFile, logoFile, maxSizeBytes = 10 * 1024 * 1024) {
+function validateFiles(imageFile, logoFile, screenshotFile, maxSizeBytes = 10 * 1024 * 1024) {
     if (!imageFile) throw new Error('Image file is required.');
     if (!imageFile.type.startsWith('image/')) throw new Error('Image must be an image file.');
     if (imageFile.size > maxSizeBytes) {
@@ -18,11 +18,17 @@ function validateFiles(imageFile, logoFile, maxSizeBytes = 10 * 1024 * 1024) {
             throw new Error(`Logo exceeds max size of ${maxMB}MB. Current size: ${Math.round(logoFile.size / (1024 * 1024))}MB.`);
         }
     }
+    if (!screenshotFile) throw new Error('Source Reference Screenshot is required.');
+    if (!screenshotFile.type.startsWith('image/')) throw new Error('Source Reference Screenshot must be an image file.');
+    if (screenshotFile.size > maxSizeBytes) {
+        const maxMB = Math.round(maxSizeBytes / (1024 * 1024));
+        throw new Error(`Source Reference Screenshot exceeds max size of ${maxMB}MB. Current size: ${Math.round(screenshotFile.size / (1024 * 1024))}MB.`);
+    }
     return true;
 }
 
 // Build FormData with correct field names
-function buildJobFormData(values, imageFile, logoFile) {
+function buildJobFormData(values, imageFile, logoFile, screenshotFile) {
     const form = new FormData();
     form.append('company', values.company || '');
     form.append('positionName', values.positionName || '');
@@ -42,6 +48,7 @@ function buildJobFormData(values, imageFile, logoFile) {
     form.append('driveContactNumber', values.driveContactNumber || '');
     if (values.applicationDeadline) form.append('applicationDeadline', values.applicationDeadline);
     form.append('type', values.type || '');
+    form.append('sourceReferenceLink', values.sourceReferenceLink || '');
     
     // Arrays: append each entry separately
     (values.responsibilities || []).forEach(r => form.append('responsibilities', r));
@@ -54,7 +61,8 @@ function buildJobFormData(values, imageFile, logoFile) {
     // Files
     form.append('image', imageFile);
     if (logoFile) form.append('logo', logoFile);
-    
+    form.append('sourceReferenceScreenshot', screenshotFile);
+
     return form;
 }
 
@@ -81,6 +89,7 @@ const AddJob = () => {
         driveContactNumber: '',
         applicationDeadline: '',
         type: '',
+        sourceReferenceLink: '',
         commonInterviewQuestions: []
     });
     const [responsibility, setResponsibility] = useState('');
@@ -88,6 +97,7 @@ const AddJob = () => {
     const [interviewQuestion, setInterviewQuestion] = useState({ question: '', answer: '' });
     const [imageFile, setImageFile] = useState(null);
     const [logoFile, setLogoFile] = useState(null);
+    const [screenshotFile, setScreenshotFile] = useState(null);
     const [errors, setErrors] = useState([]);
     const [loading, setLoading] = useState(false);
 
@@ -172,6 +182,19 @@ const AddJob = () => {
         }
     };
 
+    const handleFileChange3 = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const validation = validators.validateFile(file, 'image/*', 5 * 1024 * 1024);
+            if (validation.isValid) {
+                setScreenshotFile(file);
+                setErrors(errors.filter(err => !err.includes('Screenshot')));
+            } else {
+                setErrors([...errors.filter(err => !err.includes('Screenshot')), validation.error]);
+            }
+        }
+    };
+
     const handleDeleteResponsibility = (index) => {
         setJob({
             ...job,
@@ -236,7 +259,7 @@ const AddJob = () => {
             }
 
             // Validate files
-            validateFiles(imageFile, logoFile, 10 * 1024 * 1024);
+            validateFiles(imageFile, logoFile, screenshotFile, 10 * 1024 * 1024);
 
             // Get auth token
             const token = localStorage.getItem('token');
@@ -247,7 +270,7 @@ const AddJob = () => {
             }
 
             // Build FormData with correct field names
-            const formData = buildJobFormData(job, imageFile, logoFile);
+            const formData = buildJobFormData(job, imageFile, logoFile, screenshotFile);
 
             // Log file sizes for debugging
             console.log('image size:', imageFile.size, 'bytes');
@@ -299,10 +322,12 @@ const AddJob = () => {
                 driveContactNumber: '',
                 applicationDeadline: '',
                 type: '',
+                sourceReferenceLink: '',
                 commonInterviewQuestions: []
             });
             setImageFile(null);
             setLogoFile(null);
+            setScreenshotFile(null);
             setErrors([]);
         } catch (error) {
             console.error('Error:', error);
@@ -509,6 +534,14 @@ const AddJob = () => {
 
                     <label className="label">Logo Upload: (max 5MB)
                         <input type="file" name="logo" accept="image/*" onChange={handleFileChange2} className="input" disabled={loading} />
+                    </label>
+
+                    <label className="label">Source Reference Link:
+                        <input type="text" name="sourceReferenceLink" value={job.sourceReferenceLink} onChange={handleChange} className="input" placeholder="https://example.com/source" disabled={loading} />
+                    </label>
+
+                    <label className="label">Source Reference Screenshot: * (max 5MB)
+                        <input type="file" name="sourceReferenceScreenshot" accept="image/*" onChange={handleFileChange3} className="input" disabled={loading} />
                     </label>
 
                     <label className="label">Department: *

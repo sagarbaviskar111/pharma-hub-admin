@@ -1,5 +1,5 @@
 // src/App.js
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Home from './pages/Home';
@@ -17,9 +17,11 @@ import AdmissionOpen from './pages/AdmissionOpen';
 import EventBanner from './pages/EventBanner';
 import StudentsImg from './pages/StudentsImg';
 import Courses from './pages/Courses';
+import Ads from './pages/Ads';
+import { hasValidSession, installAuthInterceptor } from './utils/auth';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
+  const [isAuthenticated, setIsAuthenticated] = useState(hasValidSession());
 
   // Update authentication state on login
   const handleLogin = () => {
@@ -31,6 +33,13 @@ function App() {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
   };
+
+  // If the API ever rejects the stored token (expired, or issued by a
+  // different backend/environment), drop back to the Login page instead of
+  // staying stuck on a broken authenticated page.
+  useEffect(() => {
+    installAuthInterceptor(() => setIsAuthenticated(false));
+  }, []);
 
   return (
     <Router>
@@ -202,6 +211,18 @@ function App() {
             isAuthenticated ? (
               <Layout onLogout={handleLogout}>
                 <Courses />
+              </Layout>
+            ) : (
+              <Navigate to="/" />
+            )
+        }
+      />
+      <Route
+        path="/ads"
+        element={
+            isAuthenticated ? (
+              <Layout onLogout={handleLogout}>
+                <Ads />
               </Layout>
             ) : (
               <Navigate to="/" />
